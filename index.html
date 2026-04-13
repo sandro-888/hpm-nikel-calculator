@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator HPM Bijih Nikel 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ===== THEME VARIABLES ===== */
+  [data-theme="dark"] {
+    --bg: #0c0c0c; --card: #141414; --card2: #1a1a1a; --border: #242424;
+    --accent: #d4a23a; --accent-dim: #a07a1e; --accent-bg: rgba(212,162,58,0.08);
+    --green: #3dae6a; --red: #cf5555;
+    --text: #ddd; --text-strong: #fff; --sub: #999; --dim: #555;
+    --input-bg: #222; --input-border: #3a3a3a; --input-text: #eee;
+    --toggle-bg: #1a1a1a; --toggle-icon: "☀️";
+  }
+  [data-theme="light"] {
+    --bg: #f4f3f0; --card: #fff; --card2: #f9f8f6; --border: #ddd;
+    --accent: #b8860b; --accent-dim: #8a6508; --accent-bg: rgba(184,134,11,0.08);
+    --green: #2d8a4e; --red: #c44;
+    --text: #333; --text-strong: #111; --sub: #666; --dim: #999;
+    --input-bg: #fff; --input-border: #bbb; --input-text: #222;
+    --toggle-bg: #e8e8e8; --toggle-icon: "🌙";
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); padding: 20px 14px; transition: background .2s, color .2s; }
+  .wrap { max-width: 880px; margin: 0 auto; }
+
+  /* Header */
+  .hdr { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+  .hdr-left { flex: 1; }
+  .hdr-tag { font: 500 9px/1 'JetBrains Mono', monospace; color: var(--accent); text-transform: uppercase; letter-spacing: 0.18em; }
+  h1 { font: 700 20px/1.2 'DM Sans', sans-serif; color: var(--text-strong); margin: 4px 0 2px; }
+  .hdr-sub { font: 400 11px 'DM Sans', sans-serif; color: var(--dim); }
+  .hdr-sub a { color: var(--accent-dim); text-decoration: none; }
+
+  /* Theme toggle */
+  .toggle-btn {
+    background: var(--toggle-bg); border: 1px solid var(--border); border-radius: 20px;
+    padding: 6px 14px; cursor: pointer; font: 500 11px 'DM Sans', sans-serif;
+    color: var(--sub); display: flex; align-items: center; gap: 5px; transition: all .2s;
+    white-space: nowrap; margin-top: 2px;
+  }
+  .toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Formula box */
+  .formula-box {
+    background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px 14px; margin-bottom: 18px; overflow-x: auto;
+  }
+  .formula-title { font: 600 9px/1 'JetBrains Mono', monospace; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 5px; }
+  .formula-text { font: 400 10.5px/1.4 'JetBrains Mono', monospace; color: var(--sub); white-space: nowrap; }
+  .formula-text .fl { color: var(--accent); font-weight: 500; }
+  .formula-src { font: 400 9px 'DM Sans', sans-serif; color: var(--dim); margin-top: 4px; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 0; margin: 0 0 20px; border-bottom: 1px solid var(--border); }
+  .tab { padding: 9px 24px; font: 600 13px 'DM Sans', sans-serif; color: var(--dim); cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; background: none; border-top: none; border-left: none; border-right: none; }
+  .tab:hover { color: var(--sub); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* Grid */
+  .grid { display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
+  @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+
+  /* Cards */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; transition: background .2s, border-color .2s; }
+  .card-t { font: 600 10px/1 'JetBrains Mono', monospace; color: var(--accent); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .card-t .badge { font: 500 9px 'JetBrains Mono', monospace; background: var(--accent-bg); color: var(--accent); padding: 2px 6px; border-radius: 3px; }
+  .card-t.dim-t { color: var(--sub); }
+
+  /* Input fields — high contrast */
+  .field { margin-bottom: 8px; }
+  .field-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px; }
+  .field-lbl { font: 500 11px 'JetBrains Mono', monospace; color: var(--sub); }
+  .field-note { font: 400 9px 'DM Sans', sans-serif; }
+  .field-note.ok { color: var(--green); }
+  .field-note.no { color: var(--red); }
+  .field-wrap { display: flex; align-items: center; }
+  .field-wrap input {
+    width: 100%; padding: 7px 10px; font: 400 14px 'JetBrains Mono', monospace;
+    color: var(--input-text); background: var(--input-bg); border: 2px solid var(--input-border);
+    border-radius: 5px 0 0 5px; outline: none; transition: border-color .15s, background .2s;
+  }
+  .field-wrap input:focus { border-color: var(--accent); }
+  .field-unit {
+    font: 500 11px 'JetBrains Mono', monospace; color: var(--dim); padding: 8px 8px;
+    background: var(--card2); border: 2px solid var(--input-border); border-left: none;
+    border-radius: 0 5px 5px 0; white-space: nowrap; min-width: 30px; text-align: center;
+    transition: background .2s, border-color .2s;
+  }
+  .input-hint { font: 400 10px 'DM Sans', sans-serif; color: var(--dim); margin-bottom: 10px; font-style: italic; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; }
+  th { font: 600 9px 'JetBrains Mono', monospace; color: var(--sub); text-transform: uppercase; letter-spacing: 0.06em; text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--border); }
+  th.r { text-align: right; }
+  td { font: 400 11px 'JetBrains Mono', monospace; color: var(--text); padding: 6px 6px; border-bottom: 1px solid var(--border); transition: color .2s; }
+  td.r { text-align: right; }
+  td.dim { color: var(--dim); }
+  td.accent { color: var(--accent); }
+  td.lbl { color: var(--sub); font-size: 11px; }
+  tr.total td { border-top: 2px solid var(--accent-dim); font-weight: 700; padding-top: 10px; }
+  tr.total td.accent { font-size: 14px; }
+  tr.sub td { border-top: 1px solid var(--border); color: var(--text); font-weight: 600; }
+  tr.excl td { color: var(--dim); }
+
+  .hma-src { font: 400 9px 'DM Sans', sans-serif; color: var(--dim); margin-top: 8px; }
+  .hma-src a { color: var(--accent-dim); text-decoration: none; }
+  .old-note { font: 400 9px 'DM Sans', sans-serif; color: var(--dim); margin-top: 8px; font-style: italic; }
+  .footer { text-align: center; margin-top: 32px; padding: 16px 0; border-top: 1px solid var(--border); font: 400 10px 'DM Sans', sans-serif; color: var(--dim); }
+  .footer a { color: var(--accent-dim); text-decoration: none; }
+  .footer a:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- Header -->
+  <div class="hdr">
+    <div class="hdr-left">
+      <div class="hdr-tag">Kepmen ESDM No.144 / 2026</div>
+      <h1>Kalkulator HPM Bijih Nikel 2026</h1>
+      <div class="hdr-sub">Berlaku 15 April 2026 · HMA source: <a href="https://www.minerba.esdm.go.id/harga_acuan" target="_blank">minerba.esdm.go.id</a></div>
+    </div>
+    <button class="toggle-btn" id="theme-toggle" onclick="toggleTheme()">
+      <span id="toggle-icon">🌙</span> <span id="toggle-label">Dark</span>
+    </button>
+  </div>
+
+  <!-- Formula -->
+  <div class="formula-box">
+    <div class="formula-title">New HPM Formula — Bijih Nikel</div>
+    <div class="formula-text"><span class="fl">HPM</span> = [(%Ni×CF<sub>Bijih Nikel</sub>×HMA<sub>Nikel</sub>) + (%Fe×CF<sub>Besi Ikutan</sub>×HMA<sub>Bijih Besi</sub>×100) + (%Co×CF<sub>Kobalt Ikutan</sub>×HMA<sub>Kobalt</sub>) + (%Cr×CF<sub>Krom Ikutan</sub>×HMA<sub>Bijih Krom</sub>×100)] × <span class="fl">(1−MC)</span></div>
+    <div class="formula-src">Based on PPT Sosialisasi Kepmen ESDM 144 Tahun 2026</div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="saprolite">Saprolite</button>
+    <button class="tab" data-tab="limonite">Limonite</button>
+  </div>
+
+  <!-- Grid -->
+  <div class="grid">
+    <div id="left-col">
+      <div class="card" id="grade-card">
+        <div class="card-t">Ore Grades <span class="badge" id="grade-badge">saprolite</span></div>
+        <div class="input-hint">Please input here</div>
+        <div id="grade-inputs"></div>
+      </div>
+      <div class="card" id="hma-card"></div>
+    </div>
+    <div id="right-col">
+      <div class="card" id="cf-card"></div>
+      <div class="card" id="calc-card"></div>
+      <div class="card" id="old-card"></div>
+    </div>
+  </div>
+  <div class="footer">Created by <a href="https://www.linkedin.com/in/sandrosirait/" target="_blank">Sandro Sirait</a> with the help of AI tools.</div>
+</div>
+
+<script>
+// ===== Theme toggle =====
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute("data-theme");
+  const next = current === "dark" ? "light" : "dark";
+  html.setAttribute("data-theme", next);
+  document.getElementById("toggle-icon").textContent = next === "dark" ? "☀️" : "🌙";
+  document.getElementById("toggle-label").textContent = next === "dark" ? "Light" : "Dark";
+  try { localStorage.setItem("hpm-theme", next); } catch(e) {}
+}
+// Restore saved theme
+try {
+  const saved = localStorage.getItem("hpm-theme");
+  if (saved) {
+    document.documentElement.setAttribute("data-theme", saved);
+    document.getElementById("toggle-icon").textContent = saved === "dark" ? "☀️" : "🌙";
+    document.getElementById("toggle-label").textContent = saved === "dark" ? "Light" : "Dark";
+  }
+} catch(e) {}
+
+// ===== Data =====
+const data = {
+  saprolite: { ni: 1.50, fe: 20.00, co: 0.05, cr: 1.00, mc: 35 },
+  limonite:  { ni: 1.10, fe: 40.00, co: 0.10, cr: 2.00, mc: 35 },
+};
+
+const hma = {
+  nikel: 17092.67, bijih_besi: 1.55, kobalt: 55848.00, bijih_krom: 6.37,
+};
+
+let active = "saprolite";
+
+const CF_FE = 30, CF_CO = 30, CF_CR = 10;
+function cfNiNew(ni) { return 30 + ((ni - 1.6) / 0.1); }
+function cfNiOld(ni) { return 20 + ((ni - 1.9) / 0.1); }
+
+function calcNew(o) {
+  const cf_ni = cfNiNew(o.ni);
+  const feOk = o.fe <= 35;
+  const coOk = o.co >= 0.05;
+  const niComp = (o.ni / 100) * (cf_ni / 100) * hma.nikel;
+  const feComp = feOk ? (o.fe / 100) * (CF_FE / 100) * hma.bijih_besi * 100 : 0;
+  const coComp = coOk ? (o.co / 100) * (CF_CO / 100) * hma.kobalt : 0;
+  const crComp = (o.cr / 100) * (CF_CR / 100) * hma.bijih_krom * 100;
+  const sub = niComp + feComp + coComp + crComp;
+  const mcF = 1 - o.mc / 100;
+  return { cf_ni, feOk, coOk, niComp, feComp, coComp, crComp, sub, mcF, hpm: sub * mcF };
+}
+
+function calcOld(o) {
+  const cf_ni = cfNiOld(o.ni);
+  const niComp = (o.ni / 100) * (cf_ni / 100) * hma.nikel;
+  const mcF = 1 - o.mc / 100;
+  return { cf_ni, niComp, mcF, hpm: niComp * mcF };
+}
+
+function f(v, d=2) { return v.toFixed(d); }
+function fc(v) { return v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+// ===== Build inputs (only on tab switch) =====
+function buildInputs() {
+  const o = data[active];
+  document.getElementById("grade-badge").textContent = active;
+
+  const container = document.getElementById("grade-inputs");
+  container.innerHTML = "";
+
+  const fields = [
+    { k: "ni", l: "Ni", dec: 2, step: 0.01 },
+    { k: "fe", l: "Fe", dec: 2, step: 0.01 },
+    { k: "co", l: "Co", dec: 2, step: 0.01 },
+    { k: "cr", l: "Cr", dec: 2, step: 0.01 },
+    { k: "mc", l: "MC (Moisture)", dec: 0, step: 1 },
+  ];
+
+  fields.forEach(fi => {
+    const d = document.createElement("div"); d.className = "field";
+    const top = document.createElement("div"); top.className = "field-top";
+    const lbl = document.createElement("span"); lbl.className = "field-lbl"; lbl.textContent = fi.l;
+    top.appendChild(lbl);
+    const noteSpan = document.createElement("span");
+    noteSpan.className = "field-note";
+    noteSpan.id = `note-${fi.k}`;
+    top.appendChild(noteSpan);
+    d.appendChild(top);
+
+    const w = document.createElement("div"); w.className = "field-wrap";
+    const inp = document.createElement("input");
+    inp.type = "number"; inp.step = fi.step; inp.id = `inp-${fi.k}`;
+    inp.value = o[fi.k].toFixed(fi.dec);
+
+    inp.addEventListener("input", () => {
+      const v = parseFloat(inp.value);
+      if (!isNaN(v)) data[active][fi.k] = v;
+      updateNotes();
+      renderResults();
+    });
+
+    inp.addEventListener("blur", () => {
+      const v = parseFloat(inp.value);
+      if (!isNaN(v)) { data[active][fi.k] = v; inp.value = v.toFixed(fi.dec); }
+      updateNotes(); renderResults();
+    });
+
+    w.appendChild(inp);
+    const u = document.createElement("div"); u.className = "field-unit"; u.textContent = "%";
+    w.appendChild(u);
+    d.appendChild(w); container.appendChild(d);
+  });
+  updateNotes();
+}
+
+function updateNotes() {
+  const o = data[active];
+  const feNote = document.getElementById("note-fe");
+  if (feNote) {
+    if (o.fe <= 35) { feNote.textContent = "✓ ≤35% — ikutan applies"; feNote.className = "field-note ok"; }
+    else { feNote.textContent = "✗ >35% — excluded"; feNote.className = "field-note no"; }
+  }
+  const coNote = document.getElementById("note-co");
+  if (coNote) {
+    if (o.co >= 0.05) { coNote.textContent = "✓ ≥0.05% — ikutan applies"; coNote.className = "field-note ok"; }
+    else { coNote.textContent = "✗ <0.05% — excluded"; coNote.className = "field-note no"; }
+  }
+}
+
+// ===== Render output sections =====
+function renderResults() {
+  const o = data[active];
+  const rNew = calcNew(o);
+  const rOld = calcOld(o);
+  const delta = rNew.hpm - rOld.hpm;
+  const deltaPct = rOld.hpm !== 0 ? (delta / rOld.hpm) * 100 : 0;
+
+  // HMA
+  document.getElementById("hma-card").innerHTML = `
+    <div class="card-t">HMA — April 2026 (P1)</div>
+    <table>
+      <tr><th>Mineral</th><th class="r">HMA</th><th class="r">Unit</th></tr>
+      <tr><td class="lbl">Nikel</td><td class="r">${fc(hma.nikel)}</td><td class="r dim">USD/dmt</td></tr>
+      <tr><td class="lbl">Bijih Besi</td><td class="r">${fc(hma.bijih_besi)}</td><td class="r dim">USD/dmt</td></tr>
+      <tr><td class="lbl">Kobalt</td><td class="r">${fc(hma.kobalt)}</td><td class="r dim">USD/dmt</td></tr>
+      <tr><td class="lbl">Bijih Krom</td><td class="r">${fc(hma.bijih_krom)}</td><td class="r dim">USD/dmt</td></tr>
+    </table>
+    <div class="hma-src">Source: <a href="https://www.minerba.esdm.go.id/harga_acuan" target="_blank">minerba.esdm.go.id/harga_acuan</a></div>`;
+
+  // CF
+  document.getElementById("cf-card").innerHTML = `
+    <div class="card-t">Corrective Factors - New HPM Kepmen 144/2026</div>
+    <table>
+      <tr><th>Component</th><th class="r">CF</th><th>Ketentuan</th></tr>
+      <tr>
+        <td class="lbl">Nikel</td>
+        <td class="r accent">${f(rNew.cf_ni,1)}%</td>
+        <td class="dim" style="font-size:10px">Base 30% @ 1.6% Ni · ±1% per 0.1% Ni</td>
+      </tr>
+      <tr${rNew.feOk?"":" class='excl'"}>
+        <td class="lbl">Besi ikutan</td>
+        <td class="r">${CF_FE}%</td>
+        <td class="dim" style="font-size:10px">${rNew.feOk?"Fixed 30% — Fe ≤ 35%":"N/A — Fe > 35%"}</td>
+      </tr>
+      <tr${rNew.coOk?"":" class='excl'"}>
+        <td class="lbl">Kobalt ikutan</td>
+        <td class="r">${CF_CO}%</td>
+        <td class="dim" style="font-size:10px">${rNew.coOk?"Fixed 30% — Co ≥ 0.05%":"N/A — Co < 0.05%"}</td>
+      </tr>
+      <tr>
+        <td class="lbl">Krom ikutan</td>
+        <td class="r">${CF_CR}%</td>
+        <td class="dim" style="font-size:10px">Fixed 10%</td>
+      </tr>
+    </table>`;
+
+  // New formula calc
+  document.getElementById("calc-card").innerHTML = `
+    <div class="card-t">New HPM Calculation — Kepmen 144/2026</div>
+    <table>
+      <tr><th>Component</th><th class="r">Grade</th><th class="r">CF</th><th class="r">HMA</th><th class="r">Value (USD)</th></tr>
+      <tr>
+        <td class="lbl">Nikel</td>
+        <td class="r">${f(o.ni)}%</td>
+        <td class="r">${f(rNew.cf_ni,1)}%</td>
+        <td class="r dim">${fc(hma.nikel)}</td>
+        <td class="r accent">${f(rNew.niComp)}</td>
+      </tr>
+      <tr${rNew.feOk?"":" class='excl'"}>
+        <td class="lbl">Besi ikutan${rNew.feOk?"":" ✗"}</td>
+        <td class="r">${f(o.fe)}%</td>
+        <td class="r">${CF_FE}%</td>
+        <td class="r dim">${fc(hma.bijih_besi)} × 100</td>
+        <td class="r${rNew.feOk?"":" dim"}">${f(rNew.feComp)}</td>
+      </tr>
+      <tr${rNew.coOk?"":" class='excl'"}>
+        <td class="lbl">Kobalt ikutan${rNew.coOk?"":" ✗"}</td>
+        <td class="r">${f(o.co)}%</td>
+        <td class="r">${CF_CO}%</td>
+        <td class="r dim">${fc(hma.kobalt)}</td>
+        <td class="r${rNew.coOk?"":" dim"}">${f(rNew.coComp)}</td>
+      </tr>
+      <tr>
+        <td class="lbl">Krom ikutan</td>
+        <td class="r">${f(o.cr)}%</td>
+        <td class="r">${CF_CR}%</td>
+        <td class="r dim">${fc(hma.bijih_krom)} × 100</td>
+        <td class="r">${f(rNew.crComp)}</td>
+      </tr>
+      <tr class="sub">
+        <td colspan="4">Subtotal (DMT basis)</td>
+        <td class="r">${f(rNew.sub)} USD/DMT</td>
+      </tr>
+      <tr>
+        <td class="lbl" colspan="4">MC Factor (1 − ${o.mc}%)</td>
+        <td class="r dim">× ${f(rNew.mcF,4)}</td>
+      </tr>
+      <tr class="total">
+        <td colspan="4" style="color:var(--text-strong);font-size:12px">HPM Bijih Nikel (New)</td>
+        <td class="r accent">${f(rNew.hpm)} USD/WMT</td>
+      </tr>
+    </table>`;
+
+  // Old formula
+  const sign = delta >= 0 ? "+" : "";
+  document.getElementById("old-card").innerHTML = `
+    <div class="card-t dim-t">HPM Old - Kepmen 268/2025 - For comparison only</div>
+    <table>
+      <tr><th>Component</th><th class="r">Grade</th><th class="r">CF</th><th class="r">HMA</th><th class="r">Value (USD)</th></tr>
+      <tr>
+        <td class="lbl">Nikel</td>
+        <td class="r">${f(o.ni)}%</td>
+        <td class="r">${f(rOld.cf_ni,1)}%</td>
+        <td class="r dim">${fc(hma.nikel)}</td>
+        <td class="r">${f(rOld.niComp)}</td>
+      </tr>
+      <tr class="sub">
+        <td colspan="4">Subtotal (DMT basis)</td>
+        <td class="r">${f(rOld.niComp)} USD/DMT</td>
+      </tr>
+      <tr>
+        <td class="lbl" colspan="4">MC Factor (1 − ${o.mc}%)</td>
+        <td class="r dim">× ${f(rOld.mcF,4)}</td>
+      </tr>
+      <tr class="total">
+        <td colspan="4" style="color:var(--text);font-size:12px">HPM Bijih Nikel (Old)</td>
+        <td class="r accent" style="font-size:13px">${f(rOld.hpm)} USD/DMT</td>
+      </tr>
+    </table>
+    <table style="margin-top:10px">
+      <tr>
+        <td class="lbl">Δ Delta HPM New vs HPM Old</td>
+        <td class="r" style="font-weight:700;color:var(--text)">${sign}${f(delta)} USD (${sign}${f(deltaPct,1)}%)</td>
+      </tr>
+    </table>
+    <div class="old-note">Source: KEPMEN ESDM No. 268 Tahun 2025</div>`;
+}
+
+// ===== Tab switching =====
+document.querySelectorAll(".tab").forEach(t => {
+  t.addEventListener("click", () => {
+    active = t.dataset.tab;
+    document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab === active));
+    buildInputs(); renderResults();
+  });
+});
+
+buildInputs(); renderResults();
+</script>
+</body>
+</html>
