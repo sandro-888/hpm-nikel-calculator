@@ -234,7 +234,7 @@ function buildInputs() {
     { k: "fe", l: "Fe", dec: 2, step: 0.01 },
     { k: "co", l: "Co", dec: 2, step: 0.01 },
     { k: "cr", l: "Cr", dec: 2, step: 0.01 },
-    { k: "mc", l: "MC (Moisture)", dec: 0, step: 1 },
+    { k: "mc", l: "MC (Moisture)", dec: 2, step: 0.01 },
   ];
 
   fields.forEach(fi => {
@@ -405,7 +405,7 @@ function renderResults() {
       </tr>
       <tr class="total">
         <td colspan="4" style="color:var(--text);font-size:12px">HPM Bijih Nikel (Old)</td>
-        <td class="r accent" style="font-size:13px">${f(rOld.hpm)} USD/DMT</td>
+        <td class="r accent" style="font-size:13px">${f(rOld.hpm)} USD/WMT</td>
       </tr>
     </table>
     <table style="margin-top:10px">
