@@ -116,6 +116,17 @@ def update_index_html(hma_values, period_label):
         content
     )
 
+    # Update hmaPeriod label
+    short = period_label.replace("Periode Pertama", "P1").replace("Periode Kedua", "P2")
+    short = short.replace("(", "").replace(")", "").strip()
+    parts = short.split()
+    period_short = f"{parts[0]} {parts[1]} ({parts[2]})"
+    content = re.sub(
+        r'const hmaPeriod = "[^"]*";',
+        f'const hmaPeriod = "{period_short}";',
+        content
+    )
+
     # Update hma values
     new_hma_line = (
         f"  nikel: {hma_values['nikel']}, "
