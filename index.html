@@ -14,6 +14,7 @@
     --text: #ddd; --text-strong: #fff; --sub: #999; --dim: #555;
     --input-bg: #222; --input-border: #3a3a3a; --input-text: #eee;
     --toggle-bg: #1a1a1a; --toggle-icon: "☀️";
+    --warn: #c47c10;
   }
   [data-theme="light"] {
     --bg: #f4f3f0; --card: #fff; --card2: #f9f8f6; --border: #ddd;
@@ -22,6 +23,7 @@
     --text: #333; --text-strong: #111; --sub: #666; --dim: #999;
     --input-bg: #fff; --input-border: #bbb; --input-text: #222;
     --toggle-bg: #e8e8e8; --toggle-icon: "🌙";
+    --warn: #a06500;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -56,10 +58,17 @@
   .formula-src { font: 400 9px 'DM Sans', sans-serif; color: var(--dim); margin-top: 4px; }
 
   /* Tabs */
-  .tabs { display: flex; gap: 0; margin: 0 0 20px; border-bottom: 1px solid var(--border); }
-  .tab { padding: 9px 24px; font: 600 13px 'DM Sans', sans-serif; color: var(--dim); cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; background: none; border-top: none; border-left: none; border-right: none; }
-  .tab:hover { color: var(--sub); }
-  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tabs { display: flex; gap: 0; margin: 0 0 20px; border-bottom: 2px solid var(--border); }
+  .tab {
+    padding: 10px 28px; font: 600 13px 'DM Sans', sans-serif; color: var(--dim);
+    cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px;
+    transition: all .15s; background: none; border-top: none; border-left: none; border-right: none;
+    position: relative;
+  }
+  .tab:hover { color: var(--text); background: var(--accent-bg); border-radius: 6px 6px 0 0; }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--accent-bg); border-radius: 6px 6px 0 0; }
+  .tab .tab-hint { font: 400 9px 'DM Sans', sans-serif; display: block; color: var(--dim); margin-top: 1px; }
+  .tab.active .tab-hint { color: var(--accent-dim); }
 
   /* Grid */
   .grid { display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
@@ -67,29 +76,44 @@
 
   /* Cards */
   .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; transition: background .2s, border-color .2s; }
-  .card-t { font: 600 10px/1 'JetBrains Mono', monospace; color: var(--accent); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .card-t { font: 600 10px/1 'JetBrains Mono', monospace; color: var(--accent); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
   .card-t .badge { font: 500 9px 'JetBrains Mono', monospace; background: var(--accent-bg); color: var(--accent); padding: 2px 6px; border-radius: 3px; }
   .card-t.dim-t { color: var(--sub); }
 
-  /* Input fields — high contrast */
+  /* Sample data button */
+  .sample-btn {
+    font: 500 10px 'DM Sans', sans-serif; color: var(--accent-dim);
+    background: var(--accent-bg); border: 1px solid var(--accent-dim);
+    border-radius: 4px; padding: 3px 8px; cursor: pointer; transition: all .15s;
+    margin-left: auto;
+  }
+  .sample-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* Input fields */
   .field { margin-bottom: 8px; }
   .field-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px; }
   .field-lbl { font: 500 11px 'JetBrains Mono', monospace; color: var(--sub); }
   .field-note { font: 400 9px 'DM Sans', sans-serif; }
   .field-note.ok { color: var(--green); }
   .field-note.no { color: var(--red); }
+  .field-note.warn { color: var(--warn); }
   .field-wrap { display: flex; align-items: center; }
+  .field-wrap { align-items: stretch; }
   .field-wrap input {
     width: 100%; padding: 7px 10px; font: 400 14px 'JetBrains Mono', monospace;
-    color: var(--input-text); background: var(--input-bg); border: 2px solid var(--input-border);
+    color: var(--input-text); background: var(--input-bg); border: 1px solid var(--input-border);
     border-radius: 5px 0 0 5px; outline: none; transition: border-color .15s, background .2s;
+    height: 38px;
   }
   .field-wrap input:focus { border-color: var(--accent); }
+  .field-wrap input.warn-input { border-color: var(--warn); }
+  .field-wrap input.excl-input { border-color: var(--dim); background: var(--card2); color: var(--red); }
   .field-unit {
-    font: 500 11px 'JetBrains Mono', monospace; color: var(--dim); padding: 8px 8px;
-    background: var(--card2); border: 2px solid var(--input-border); border-left: none;
+    font: 500 11px 'JetBrains Mono', monospace; color: var(--dim); padding: 0 8px;
+    background: var(--card2); border: 1px solid var(--input-border); border-left: none;
     border-radius: 0 5px 5px 0; white-space: nowrap; min-width: 30px; text-align: center;
-    transition: background .2s, border-color .2s;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .2s, border-color .2s; height: 38px;
   }
   .input-hint { font: 400 10px 'DM Sans', sans-serif; color: var(--dim); margin-bottom: 10px; font-style: italic; }
 
@@ -105,7 +129,25 @@
   tr.total td { border-top: 2px solid var(--accent-dim); font-weight: 700; padding-top: 10px; }
   tr.total td.accent { font-size: 14px; }
   tr.sub td { border-top: 1px solid var(--border); color: var(--text); font-weight: 600; }
-  tr.excl td { color: var(--dim); }
+  tr.excl td { color: var(--red); }
+
+  /* Flash animation on result update */
+  @keyframes flash {
+    0% { background: var(--accent-bg); }
+    100% { background: transparent; }
+  }
+  .flashing { animation: flash 0.5s ease-out; }
+
+  /* Copy result button */
+  .copy-btn {
+    display: flex; align-items: center; gap: 5px; margin-top: 10px;
+    font: 500 10px 'DM Sans', sans-serif; color: var(--sub);
+    background: var(--card2); border: 1px solid var(--border);
+    border-radius: 5px; padding: 6px 12px; cursor: pointer; transition: all .15s;
+    width: 100%;  justify-content: center;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .copy-btn.copied { border-color: var(--green); color: var(--green); }
 
   .hma-src { font: 400 9px 'DM Sans', sans-serif; color: var(--dim); margin-top: 8px; }
   .hma-src a { color: var(--accent-dim); text-decoration: none; }
@@ -113,6 +155,16 @@
   .footer { text-align: center; margin-top: 32px; padding: 16px 0; border-top: 1px solid var(--border); font: 400 10px 'DM Sans', sans-serif; color: var(--dim); }
   .footer a { color: var(--accent-dim); text-decoration: none; }
   .footer a:hover { color: var(--accent); }
+
+  /* Mobile tweaks */
+  @media (max-width: 500px) {
+    body { padding: 14px 10px; }
+    h1 { font-size: 17px; }
+    .tab { padding: 8px 16px; font-size: 12px; }
+    td, th { font-size: 10px; padding: 5px 4px; }
+    .field-wrap input { font-size: 13px; }
+    tr.total td.accent { font-size: 13px; }
+  }
 </style>
 </head>
 <body>
@@ -146,7 +198,10 @@
   <div class="grid">
     <div id="left-col">
       <div class="card" id="grade-card">
-        <div class="card-t">Ore Grades <span class="badge" id="grade-badge">saprolite</span></div>
+        <div class="card-t">
+          Ore Grades <span class="badge" id="grade-badge">saprolite</span>
+          <button class="sample-btn" id="sample-btn" onclick="loadSample()">Reset</button>
+        </div>
         <div class="input-hint">Please input here</div>
         <div id="grade-inputs"></div>
       </div>
@@ -172,7 +227,6 @@ function toggleTheme() {
   document.getElementById("toggle-label").textContent = next === "dark" ? "Light" : "Dark";
   try { localStorage.setItem("hpm-theme", next); } catch(e) {}
 }
-// Restore saved theme
 try {
   const saved = localStorage.getItem("hpm-theme");
   if (saved) {
@@ -188,10 +242,16 @@ const data = {
   limonite:  { ni: 1.10, fe: 40.00, co: 0.10, cr: 2.00, mc: 35 },
 };
 
-const hma = {
-    nikel: 16933.57, bijih_besi: 1.58, kobalt: 55852.86, bijih_krom: 6.37,
+const defaultData = {
+  saprolite: { ni: 1.50, fe: 20.00, co: 0.05, cr: 1.00, mc: 35.00 },
+  limonite:  { ni: 1.10, fe: 40.00, co: 0.10, cr: 2.00, mc: 35.00 },
 };
-const hmaUpdated = "2026-04-16 00:42 WIB";
+
+const hma = {
+  nikel: 16933.57, bijih_besi: 1.58, kobalt: 55852.86, bijih_krom: 6.37,
+};
+const hmaUpdated = "2026-04-16 00:01 WIB";
+const hmaPeriod = "April 2026 (P2)";
 
 let active = "saprolite";
 
@@ -221,6 +281,41 @@ function calcOld(o) {
 
 function f(v, d=2) { return v.toFixed(d); }
 function fc(v) { return v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+// ===== Input validation ranges =====
+const RANGES = {
+  ni:  { min: 0.5,  max: 3.0,  label: "Ni" },
+  fe:  { min: 5,    max: 60,   label: "Fe" },
+  co:  { min: 0,    max: 1.0,  label: "Co" },
+  cr:  { min: 0,    max: 10,   label: "Cr" },
+  mc:  { min: 10,   max: 60,   label: "MC" },
+};
+
+function validateField(k, v) {
+  const r = RANGES[k];
+  if (!r) return null;
+  if (v < r.min) return { type: "warn", msg: `Low — typical ${r.label} ≥ ${r.min}%` };
+  if (v > r.max) return { type: "warn", msg: `High — typical ${r.label} ≤ ${r.max}%` };
+  return null;
+}
+
+// ===== Load sample data =====
+function loadSample() {
+  const s = defaultData[active];
+  data[active] = { ...s };
+  const fields = ["ni", "fe", "co", "cr", "mc"];
+  fields.forEach(k => {
+    const inp = document.getElementById(`inp-${k}`);
+    if (inp) inp.value = s[k].toFixed(2);
+  });
+  updateNotes();
+  renderResults();
+
+  // Flash the button to confirm
+  const btn = document.getElementById("sample-btn");
+  btn.textContent = "✓ Reset";
+  setTimeout(() => btn.textContent = "Reset", 1500);
+}
 
 // ===== Build inputs (only on tab switch) =====
 function buildInputs() {
@@ -277,16 +372,98 @@ function buildInputs() {
 
 function updateNotes() {
   const o = data[active];
+
+  // Fe eligibility note + input highlight
   const feNote = document.getElementById("note-fe");
+  const feInp = document.getElementById("inp-fe");
   if (feNote) {
-    if (o.fe <= 35) { feNote.textContent = "✓ ≤35% — ikutan applies"; feNote.className = "field-note ok"; }
-    else { feNote.textContent = "✗ >35% — excluded"; feNote.className = "field-note no"; }
+    if (o.fe <= 35) {
+      feNote.textContent = "✓ ≤35% — ikutan applies"; feNote.className = "field-note ok";
+      feInp && feInp.classList.remove("excl-input");
+    } else {
+      feNote.textContent = "✗ >35% — excluded"; feNote.className = "field-note no";
+      feInp && feInp.classList.add("excl-input");
+    }
   }
+
+  // Co eligibility note + input highlight
   const coNote = document.getElementById("note-co");
+  const coInp = document.getElementById("inp-co");
   if (coNote) {
-    if (o.co >= 0.05) { coNote.textContent = "✓ ≥0.05% — ikutan applies"; coNote.className = "field-note ok"; }
-    else { coNote.textContent = "✗ <0.05% — excluded"; coNote.className = "field-note no"; }
+    if (o.co >= 0.05) {
+      coNote.textContent = "✓ ≥0.05% — ikutan applies"; coNote.className = "field-note ok";
+      coInp && coInp.classList.remove("excl-input");
+    } else {
+      coNote.textContent = "✗ <0.05% — excluded"; coNote.className = "field-note no";
+      coInp && coInp.classList.add("excl-input");
+    }
   }
+
+  // Validation warnings for all fields
+  ["ni", "fe", "co", "cr", "mc"].forEach(k => {
+    const inp = document.getElementById(`inp-${k}`);
+    const note = document.getElementById(`note-${k}`);
+    if (!inp || !note) return;
+    const v = parseFloat(inp.value);
+    if (isNaN(v)) return;
+    const warn = validateField(k, v);
+    // Only show warn if no eligibility note already shown for fe/co
+    if (warn && k !== "fe" && k !== "co") {
+      note.textContent = "⚠ " + warn.msg;
+      note.className = "field-note warn";
+      inp.classList.add("warn-input");
+    } else if (!warn && k !== "fe" && k !== "co") {
+      if (!note.textContent) note.textContent = "";
+      inp.classList.remove("warn-input");
+    } else {
+      inp.classList.remove("warn-input");
+    }
+  });
+}
+
+// ===== Flash animation helper =====
+function flashElement(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove("flashing");
+  void el.offsetWidth; // force reflow
+  el.classList.add("flashing");
+  setTimeout(() => el.classList.remove("flashing"), 500);
+}
+
+// ===== Copy result =====
+function copyResult() {
+  const o = data[active];
+  const rNew = calcNew(o);
+  const rOld = calcOld(o);
+  const delta = rNew.hpm - rOld.hpm;
+  const sign = delta >= 0 ? "+" : "";
+  const oreType = active === "saprolite" ? "Saprolite" : "Limonite";
+  const text =
+`HPM Bijih Nikel — ${oreType}
+
+[Input]
+• Ore grades: Ni ${f(o.ni)}%, Fe ${f(o.fe)}%, Co ${f(o.co)}%, Cr ${f(o.cr)}%, MC ${f(o.mc)}%
+• HMA ${hmaPeriod}: Ni ${fc(hma.nikel)}, Fe ${fc(hma.bijih_besi)}, Co ${fc(hma.kobalt)}, Cr ${fc(hma.bijih_krom)} (USD/dmt)
+
+[Results]
+HPM New (Kepmen 144/2026): ${f(rNew.hpm)} USD/WMT
+HPM Old (Kepmen 268/2025): ${f(rOld.hpm)} USD/WMT
+Delta: ${sign}${f(delta)} USD (${sign}${f((delta/rOld.hpm)*100,1)}%)
+
+Calculated via: https://sandro-888.github.io/hpm-nikel-calculator/`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById("copy-btn");
+    btn.textContent = "✓ Copied!";
+    btn.classList.add("copied");
+    setTimeout(() => {
+      btn.textContent = "📋 Copy result";
+      btn.classList.remove("copied");
+    }, 2000);
+  }).catch(() => {
+    alert("Copy failed — please copy manually.");
+  });
 }
 
 // ===== Render output sections =====
@@ -296,6 +473,10 @@ function renderResults() {
   const rOld = calcOld(o);
   const delta = rNew.hpm - rOld.hpm;
   const deltaPct = rOld.hpm !== 0 ? (delta / rOld.hpm) * 100 : 0;
+
+  // Flash the result cards
+  flashElement("calc-card");
+  flashElement("old-card");
 
   // HMA
   document.getElementById("hma-card").innerHTML = `
@@ -381,7 +562,8 @@ function renderResults() {
         <td colspan="4" style="color:var(--text-strong);font-size:12px">HPM Bijih Nikel (New)</td>
         <td class="r accent">${f(rNew.hpm)} USD/WMT</td>
       </tr>
-    </table>`;
+    </table>
+    <button class="copy-btn" id="copy-btn" onclick="copyResult()">📋 Copy result</button>`;
 
   // Old formula
   const sign = delta >= 0 ? "+" : "";
