@@ -51,7 +51,7 @@
     padding: 10px 14px; margin-bottom: 18px; overflow-x: auto;
   }
   .formula-title { font: 600 9px/1 'JetBrains Mono', monospace; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 5px; }
-  .formula-text { font: 400 10.5px/1.4 'JetBrains Mono', monospace; color: var(--sub); white-space: nowrap; }
+  .formula-text { font: 400 10.5px/1.6 'JetBrains Mono', monospace; color: var(--sub); white-space: normal; word-break: break-word; }
   .formula-text .fl { color: var(--accent); font-weight: 500; }
   .formula-src { font: 400 9px 'DM Sans', sans-serif; color: var(--dim); margin-top: 4px; }
 
@@ -122,7 +122,7 @@
     <div class="hdr-left">
       <div class="hdr-tag">Kepmen ESDM No.144 / 2026</div>
       <h1>Kalkulator HPM Bijih Nikel 2026</h1>
-      <div class="hdr-sub">Berlaku 16–30 April 2026 · HMA source: <a href="https://www.minerba.esdm.go.id/harga_acuan" target="_blank">minerba.esdm.go.id</a></div>
+      <div class="hdr-sub">Formula HPM baru berlaku sejak 15 April 2026 · HMA source: <a href="https://www.minerba.esdm.go.id/harga_acuan" target="_blank">minerba.esdm.go.id</a></div>
     </div>
     <button class="toggle-btn" id="theme-toggle" onclick="toggleTheme()">
       <span id="toggle-icon">🌙</span> <span id="toggle-label">Dark</span>
@@ -132,8 +132,8 @@
   <!-- Formula -->
   <div class="formula-box">
     <div class="formula-title">New HPM Formula — Bijih Nikel</div>
-    <div class="formula-text"><span class="fl">HPM</span> = [(%Ni×CF<sub>Bijih Nikel</sub>×HMA<sub>Nikel</sub>) + (%Fe×CF<sub>Besi Ikutan</sub>×HMA<sub>Bijih Besi</sub>×100) + (%Co×CF<sub>Kobalt Ikutan</sub>×HMA<sub>Kobalt</sub>) + (%Cr×CF<sub>Krom Ikutan</sub>×HMA<sub>Bijih Krom</sub>×100)] × <span class="fl">(1−MC)</span></div>
-    <div class="formula-src">Based on PPT Sosialisasi Kepmen ESDM 144 Tahun 2026</div>
+    <div class="formula-text"><span class="fl">HPM</span> = [(%Ni×CF<sub>Bijih Nikel</sub>×HMA<sub>Nikel</sub>) + (%Fe×CF<sub>Besi Ikutan</sub>×HMA<sub>Bijih Besi</sub>×100)<br>+ (%Co×CF<sub>Kobalt Ikutan</sub>×HMA<sub>Kobalt</sub>) + (%Cr×CF<sub>Krom Ikutan</sub>×HMA<sub>Bijih Krom</sub>×100)] × <span class="fl">(1−MC)</span></div>
+    <div class="formula-src">Based on <a href="https://jdih.esdm.go.id/dokumen/view?id=2758" target="_blank" style="color:var(--accent-dim);text-decoration:none;">KEPMEN ESDM 144/2026</a></div>
   </div>
 
   <!-- Tabs -->
@@ -189,8 +189,9 @@ const data = {
 };
 
 const hma = {
-    nikel: 16933.57, bijih_besi: 1.58, kobalt: 55852.86, bijih_krom: 6.37,
+  nikel: 16933.57, bijih_besi: 1.58, kobalt: 55852.86, bijih_krom: 6.37,
 };
+const hmaUpdated = "2026-04-16 00:01 WIB";
 
 let active = "saprolite";
 
@@ -306,7 +307,7 @@ function renderResults() {
       <tr><td class="lbl">Kobalt</td><td class="r">${fc(hma.kobalt)}</td><td class="r dim">USD/dmt</td></tr>
       <tr><td class="lbl">Bijih Krom</td><td class="r">${fc(hma.bijih_krom)}</td><td class="r dim">USD/dmt</td></tr>
     </table>
-    <div class="hma-src">Source: <a href="https://www.minerba.esdm.go.id/harga_acuan" target="_blank">minerba.esdm.go.id/harga_acuan</a></div>`;
+    <div class="hma-src">Source: <a href="https://www.minerba.esdm.go.id/harga_acuan" target="_blank">minerba.esdm.go.id/harga_acuan</a><br>Last updated: ${hmaUpdated}</div>`;
 
   // CF
   document.getElementById("cf-card").innerHTML = `
