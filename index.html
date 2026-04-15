@@ -122,7 +122,7 @@
     <div class="hdr-left">
       <div class="hdr-tag">Kepmen ESDM No.144 / 2026</div>
       <h1>Kalkulator HPM Bijih Nikel 2026</h1>
-      <div class="hdr-sub">Berlaku 15 April 2026 · HMA source: <a href="https://www.minerba.esdm.go.id/harga_acuan" target="_blank">minerba.esdm.go.id</a></div>
+      <div class="hdr-sub">Berlaku 16–30 April 2026 · HMA source: <a href="https://www.minerba.esdm.go.id/harga_acuan" target="_blank">minerba.esdm.go.id</a></div>
     </div>
     <button class="toggle-btn" id="theme-toggle" onclick="toggleTheme()">
       <span id="toggle-icon">🌙</span> <span id="toggle-label">Dark</span>
@@ -189,7 +189,7 @@ const data = {
 };
 
 const hma = {
-  nikel: 17092.67, bijih_besi: 1.55, kobalt: 55848.00, bijih_krom: 6.37,
+    nikel: 16933.57, bijih_besi: 1.58, kobalt: 55852.86, bijih_krom: 6.37,
 };
 
 let active = "saprolite";
@@ -298,7 +298,7 @@ function renderResults() {
 
   // HMA
   document.getElementById("hma-card").innerHTML = `
-    <div class="card-t">HMA — April 2026 (P1)</div>
+    <div class="card-t">HMA — April 2026 (P2)</div>
     <table>
       <tr><th>Mineral</th><th class="r">HMA</th><th class="r">Unit</th></tr>
       <tr><td class="lbl">Nikel</td><td class="r">${fc(hma.nikel)}</td><td class="r dim">USD/dmt</td></tr>
