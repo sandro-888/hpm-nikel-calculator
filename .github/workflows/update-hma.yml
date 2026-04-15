@@ -1,0 +1,42 @@
+name: Auto-update HMA prices
+
+on:
+  schedule:
+    # Runs on 1st and 16th of every month at 08:00 WIB (01:00 UTC)
+    - cron: '0 1 1 * *'
+    - cron: '0 1 16 * *'
+  workflow_dispatch:  # Allow manual trigger from GitHub Actions tab
+
+jobs:
+  update-hma:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Fetch latest HMA and update index.html
+        run: python update_hma.py
+
+      - name: Check if index.html changed
+        id: diff
+        run: |
+          git diff --quiet index.html && echo "changed=false" >> $GITHUB_OUTPUT || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Commit and push if changed
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Auto-update HMA prices $(date +'%Y-%m-%d')"
+          git push
+
+      - name: No changes detected
+        if: steps.diff.outputs.changed == 'false'
+        run: echo "HMA values unchanged — no commit needed."
