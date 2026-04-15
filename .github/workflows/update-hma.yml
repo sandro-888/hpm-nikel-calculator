@@ -2,9 +2,8 @@ name: Auto-update HMA prices
 
 on:
   schedule:
-    # Runs on 1st and 16th of every month at 08:00 WIB (01:00 UTC)
-    - cron: '0 1 1 * *'
-    - cron: '0 1 16 * *'
+    # Runs daily at 08:00 WIB (01:00 UTC)
+    - cron: '0 1 * * *'
   workflow_dispatch:  # Allow manual trigger from GitHub Actions tab
 
 jobs:
