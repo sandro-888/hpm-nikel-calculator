@@ -8,6 +8,7 @@ Runs as part of the GitHub Actions workflow.
 import re
 import sys
 import urllib.request
+from datetime import datetime, timezone, timedelta
 
 
 URL = "https://www.minerba.esdm.go.id/harga_acuan"
@@ -106,6 +107,15 @@ def update_index_html(hma_values, period_label):
     with open("index.html", "r", encoding="utf-8") as f:
         content = f.read()
 
+    # Update last-updated timestamp (WIB = UTC+7)
+    wib = timezone(timedelta(hours=7))
+    now_wib = datetime.now(wib).strftime("%Y-%m-%d %H:%M WIB")
+    content = re.sub(
+        r'const hmaUpdated = "[^"]*";',
+        f'const hmaUpdated = "{now_wib}";',
+        content
+    )
+
     # Update hma values
     new_hma_line = (
         f"  nikel: {hma_values['nikel']}, "
@@ -131,21 +141,11 @@ def update_index_html(hma_values, period_label):
         content
     )
 
-    # Update header date
-    month_year = f"{parts[0]} {parts[1]}"
-    berlaku = f"Berlaku 1\u201315 {month_year}" if "P1" in parts else f"Berlaku 16\u201330 {month_year}"
-    content = re.sub(
-        r"Berlaku[\s\d\u2013-]+\w+\s+\d{4}",
-        berlaku,
-        content
-    )
-
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(content)
 
     print(f"\nindex.html updated:")
     print(f"  Period : {card_title}")
-    print(f"  Header : {berlaku}")
     print(f"  Values : {hma_values}")
 
 
