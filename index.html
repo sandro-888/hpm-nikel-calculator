@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kalkulator HPM Bijih Nikel 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   /* ===== THEME VARIABLES ===== */
   [data-theme="dark"] {
@@ -156,6 +157,19 @@
   .footer a { color: var(--accent-dim); text-decoration: none; }
   .footer a:hover { color: var(--accent); }
 
+  /* Chart tab */
+  .chart-panel { display: none; }
+  .chart-panel.active { display: block; }
+  .calc-panel { display: block; }
+  .calc-panel.hidden { display: none; }
+  .grid.hidden { display: none; }
+  .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 14px; }
+  .chart-note { font: 400 9px 'DM Sans', sans-serif; color: var(--dim); margin-top: 10px; text-align: center; }
+  .chart-note a { color: var(--accent-dim); text-decoration: none; }
+  .chart-section-label { font: 600 10px 'JetBrains Mono', monospace; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+  .chart-hma-note { font: 400 10px 'DM Sans', sans-serif; color: var(--dim); margin-bottom: 14px; }
+  .chart-hma-note span { color: var(--accent); font-weight: 600; }
+
   /* Mobile tweaks */
   @media (max-width: 500px) {
     body { padding: 14px 10px; }
@@ -190,12 +204,42 @@
 
   <!-- Tabs -->
   <div class="tabs">
-    <button class="tab active" data-tab="saprolite">Saprolite</button>
-    <button class="tab" data-tab="limonite">Limonite</button>
+    <button class="tab active" data-tab="limonite">Limonite</button>
+    <button class="tab" data-tab="saprolite">Saprolite</button>
+    <button class="tab" data-tab="chart">HPM vs Market [graph]</button>
+    <button class="tab" data-tab="fe-sensitivity">Fe Sensitivity [graph]</button>
+    <button class="tab" data-tab="co-sensitivity">Co Sensitivity [graph]</button>
+  </div>
+
+  <!-- Chart panel -->
+  <div class="chart-panel" id="chart-panel">
+    <div class="chart-card">
+      <div class="chart-section-label">HPM vs Market — Limonite → Saprolite</div>
+      <div class="chart-hma-note">HPM calculated using HMA <span id="chart-hma-period">April 2026 (P2)</span> · Market price from field data</div>
+      <canvas id="chart-combined" height="170"></canvas>
+    </div>
+  </div>
+
+  <!-- Fe Sensitivity panel -->
+  <div class="chart-panel" id="fe-panel">
+    <div class="chart-card">
+      <div class="chart-section-label">Fe Sensitivity — HPM vs Fe Content</div>
+      <div class="chart-hma-note">Fixed: Ni 1.1% · Co 0.10% · Cr 2% · MC 35% · HMA <span id="fe-hma-period">April 2026 (P2)</span></div>
+      <canvas id="chart-fe" height="170"></canvas>
+    </div>
+  </div>
+
+  <!-- Co Sensitivity panel -->
+  <div class="chart-panel" id="co-panel">
+    <div class="chart-card">
+      <div class="chart-section-label">Co Sensitivity — HPM vs Co Content</div>
+      <div class="chart-hma-note">Fixed: Ni 1.5% · Fe 20% · Cr 1% · MC 35% · HMA <span id="co-hma-period">April 2026 (P2)</span></div>
+      <canvas id="chart-co" height="170"></canvas>
+    </div>
   </div>
 
   <!-- Grid -->
-  <div class="grid">
+  <div class="grid" id="calc-panel">
     <div id="left-col">
       <div class="card" id="grade-card">
         <div class="card-t">
@@ -248,12 +292,12 @@ const defaultData = {
 };
 
 const hma = {
-    nikel: 16933.57, bijih_besi: 1.58, kobalt: 55852.86, bijih_krom: 6.37,
+  nikel: 16933.57, bijih_besi: 1.58, kobalt: 55852.86, bijih_krom: 6.37,
 };
-const hmaUpdated = "2026-04-16 02:08 WIB";
+const hmaUpdated = "2026-04-16 00:01 WIB";
 const hmaPeriod = "April 2026 (P2)";
 
-let active = "saprolite";
+let active = "limonite";
 
 const CF_FE = 30, CF_CO = 30, CF_CR = 10;
 function cfNiNew(ni) { return 30 + ((ni - 1.6) / 0.1); }
@@ -603,11 +647,514 @@ function renderResults() {
 // ===== Tab switching =====
 document.querySelectorAll(".tab").forEach(t => {
   t.addEventListener("click", () => {
-    active = t.dataset.tab;
-    document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab === active));
-    buildInputs(); renderResults();
+    const tab = t.dataset.tab;
+    document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+
+    const graphTabs = ["chart", "fe-sensitivity", "co-sensitivity"];
+    if (graphTabs.includes(tab)) {
+      document.getElementById("calc-panel").classList.add("hidden");
+      document.getElementById("chart-panel").classList.toggle("active", tab === "chart");
+      document.getElementById("fe-panel").classList.toggle("active", tab === "fe-sensitivity");
+      document.getElementById("co-panel").classList.toggle("active", tab === "co-sensitivity");
+      if (tab === "chart") renderCharts();
+      else if (tab === "fe-sensitivity") renderFeSensitivity();
+      else if (tab === "co-sensitivity") renderCoSensitivity();
+    } else {
+      document.getElementById("chart-panel").classList.remove("active");
+      document.getElementById("fe-panel").classList.remove("active");
+      document.getElementById("co-panel").classList.remove("active");
+      document.getElementById("calc-panel").classList.remove("hidden");
+      active = tab;
+      buildInputs(); renderResults();
+    }
   });
 });
+
+// ===== Chart data =====
+// X-axis labels: "Ni X.XX% / Co X.XX%"
+// Limonite: Fe 40%, Cr 2%, MC 35%
+const chartDataLimonite = [
+  { ni: 1.20, co: 0.10, market: 22.5 },
+  { ni: 1.20, co: 0.12, market: 22.5 },
+  { ni: 1.20, co: 0.14, market: 22.5 },
+  { ni: 1.30, co: 0.10, market: 24.5 },
+  { ni: 1.30, co: 0.12, market: 24.5 },
+  { ni: 1.30, co: 0.14, market: 24.5 },
+];
+// Saprolite: Fe 18%, Cr 1%, MC 35%
+const chartDataSaprolite = [
+  { ni: 1.40, co: 0.04, market: 53.2 },
+  { ni: 1.40, co: 0.05, market: 53.2 },
+  { ni: 1.50, co: 0.04, market: 59.8 },
+  { ni: 1.50, co: 0.05, market: 59.8 },
+  { ni: 1.60, co: 0.04, market: 63.6 },
+  { ni: 1.60, co: 0.05, market: 63.6 },
+];
+
+let chartCombined = null;
+
+function buildChartPoints(rows, fe, cr, mc) {
+  return rows.map(r => {
+    const o = { ni: r.ni, fe, co: r.co, cr, mc };
+    const rNew = calcNew(o);
+    const rOld = calcOld(o);
+    const fmt = v => parseFloat(v.toFixed(2)).toString();
+    // label[0,1] = Ni/Co (normal color); label[2,3] = Fe/Cr (accent color, drawn via plugin)
+    return { label: [`Ni ${fmt(r.ni)}%`, `Co ${fmt(r.co)}%`, `Fe ${fmt(fe)}%`, `Cr ${fmt(cr)}%`], newHpm: rNew.hpm, oldHpm: rOld.hpm, market: r.market };
+  });
+}
+
+function renderCharts() {
+  // Update period label
+  document.getElementById("chart-hma-period").textContent = hmaPeriod;
+
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  const gridColor = isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)";
+  const tickColor = isDark ? "#666" : "#999";
+  const textColor = isDark ? "#ddd" : "#333";
+
+  const limonitePoints = buildChartPoints(chartDataLimonite, 40, 2, 35);
+  const saprolitePoints = buildChartPoints(chartDataSaprolite, 18, 1, 35);
+
+  // Combine all points: Limonite first, then Saprolite
+  // Add a visual separator label between the two groups
+  const allPoints = [
+    ...limonitePoints.map(p => ({ ...p, group: "Limo" })),
+    ...saprolitePoints.map(p => ({ ...p, group: "Sapro" })),
+  ];
+  const limoCount = limonitePoints.length;
+
+  // Chart.js supports multiline labels as arrays
+  const labels = allPoints.map(p => p.label);
+
+  // Vertical divider line between Limonite and Saprolite via annotation plugin (not available),
+  // so we use a null-gap segment approach: datasets are split into two segments with null in between,
+  // and we add a background color band via afterDraw plugin.
+  const n = allPoints.length;
+  const newHpm   = allPoints.map(p => p.newHpm);
+  const oldHpm   = allPoints.map(p => p.oldHpm);
+  const market   = allPoints.map(p => p.market);
+
+  // Custom plugin: draw background bands, divider line, and Fe/Cr tick lines in accent color
+  const dividerPlugin = {
+    id: "oreTypeDivider",
+    afterDraw(chart) {
+      const { ctx, chartArea, scales } = chart;
+      const xScale = scales.x;
+      const x0 = xScale.getPixelForValue(limoCount - 1);
+      const x1 = xScale.getPixelForValue(limoCount);
+      const xMid = (x0 + x1) / 2;
+      const top = chartArea.top;
+      const bottom = chartArea.bottom;
+      const left = chartArea.left;
+      const right = chartArea.right;
+
+      ctx.save();
+
+      // Background bands
+      ctx.fillStyle = isDark ? "rgba(122,179,212,0.10)" : "rgba(122,179,212,0.13)";
+      ctx.fillRect(left, top, xMid - left, bottom - top);
+      ctx.fillStyle = isDark ? "rgba(80,160,80,0.10)" : "rgba(80,160,80,0.13)";
+      ctx.fillRect(xMid, top, right - xMid, bottom - top);
+
+      // Vertical divider line
+      ctx.setLineDash([4, 3]);
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.3)";
+      ctx.beginPath();
+      ctx.moveTo(xMid, top);
+      ctx.lineTo(xMid, bottom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Section labels inside chart area
+      ctx.font = "600 9px 'DM Sans', sans-serif";
+      ctx.fillStyle = isDark ? "rgba(122,179,212,0.7)" : "rgba(60,110,160,0.75)";
+      ctx.textAlign = "right";
+      ctx.fillText("← Limonite", xMid - 5, top + 12);
+      ctx.fillStyle = isDark ? "rgba(80,180,80,0.7)" : "rgba(40,120,40,0.75)";
+      ctx.textAlign = "left";
+      ctx.fillText("Saprolite →", xMid + 5, top + 12);
+
+      // Draw Co, Fe, Cr lines ourselves (Chart.js only renders Ni / line 0)
+      const fontSize = 9;
+      const lineHeight = fontSize * 1.6;
+      const tickPadding = 4;
+      // Line 0 (Ni) is rendered by Chart.js at approximately:
+      const yLine0 = bottom + tickPadding + fontSize;
+      const yLine1 = yLine0 + lineHeight;   // Co
+      const yLine2 = yLine1 + lineHeight;   // Fe
+      const yLine3 = yLine2 + lineHeight;   // Cr
+
+      ctx.font = `400 ${fontSize}px 'JetBrains Mono', monospace`;
+      ctx.textAlign = "center";
+
+      allPoints.forEach((p, i) => {
+        const x = xScale.getPixelForValue(i);
+        const color = i < limoCount
+          ? (isDark ? "#7ab3d4" : "#4a80a8")
+          : (isDark ? "#7ab87a" : "#3a7a3a");
+        ctx.fillStyle = color;
+        ctx.fillText(p.label[1], x, yLine1);  // Co
+        ctx.fillText(p.label[2], x, yLine2);  // Fe
+        ctx.fillText(p.label[3], x, yLine3);  // Cr
+      });
+
+      ctx.restore();
+    }
+  };
+
+  const cfg = {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "New HPM (Kepmen 144/2026)",
+          data: newHpm,
+          borderColor: "#1a3a5c", backgroundColor: "rgba(26,58,92,0.1)",
+          borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: "#1a3a5c", tension: 0.3,
+          segment: { borderDash: ctx => ctx.p0DataIndex >= limoCount - 1 && ctx.p1DataIndex === limoCount ? [4,3] : undefined },
+        },
+        {
+          label: "Old HPM (Kepmen 268/2025)",
+          data: oldHpm,
+          borderColor: "#7ab3d4", backgroundColor: "rgba(122,179,212,0.1)",
+          borderWidth: 2, pointRadius: 5, pointStyle: "triangle", pointBackgroundColor: "#7ab3d4", tension: 0.3,
+          borderDash: [5,3],
+        },
+        {
+          label: "Market Price",
+          data: market,
+          borderColor: "#c0392b", backgroundColor: "rgba(192,57,43,0.1)",
+          borderWidth: 2.5, pointRadius: 5, pointStyle: "rect", pointBackgroundColor: "#c0392b", tension: 0.3,
+          segment: { borderDash: ctx => ctx.p0DataIndex >= limoCount - 1 && ctx.p1DataIndex === limoCount ? [4,3] : undefined },
+        },
+      ]
+    },
+    options: {
+      responsive: true,
+      layout: { padding: { bottom: 55 } },
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { labels: { color: textColor, font: { family: "DM Sans", size: 11 }, boxWidth: 20 } },
+        tooltip: {
+          callbacks: {
+            title: items => Array.isArray(items[0].label) ? items[0].label.join(" / ") : items[0].label,
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)} USD/WMT`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: (ctx) => ctx.index < limoCount ? (isDark ? "#7ab3d4" : "#4a80a8") : (isDark ? "#7ab87a" : "#3a7a3a"),
+            font: { family: "JetBrains Mono", size: 9 },
+            maxRotation: 0,
+            callback: function(val) {
+              // Only let Chart.js render line 0 (Ni); we draw Co/Fe/Cr ourselves
+              const lbl = this.getLabelForValue(val);
+              return Array.isArray(lbl) ? lbl[0] : lbl;
+            }
+          },
+          grid: { color: gridColor },
+        },
+        y: {
+          ticks: { color: tickColor, font: { family: "JetBrains Mono", size: 9 }, callback: v => v.toFixed(1) },
+          grid: { color: gridColor },
+          title: { display: true, text: "USD/WMT", color: tickColor, font: { size: 10 } }
+        }
+      }
+    },
+    plugins: [dividerPlugin],
+  };
+
+  if (chartCombined) chartCombined.destroy();
+  chartCombined = new Chart(document.getElementById("chart-combined"), cfg);
+}
+
+// ===== Fe Sensitivity chart =====
+let chartFe = null;
+
+function renderFeSensitivity() {
+  document.getElementById("fe-hma-period").textContent = hmaPeriod;
+
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  const gridColor = isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)";
+  const tickColor = isDark ? "#666" : "#999";
+  const textColor = isDark ? "#ddd" : "#333";
+
+  // Fixed Limonite params, Fe sweeps 20→40 step 1
+  const NI = 1.10, CO = 0.10, CR = 2.00, MC = 35;
+  const THRESHOLD = 35;
+  const feValues = [];
+  for (let fe = 20; fe <= 40; fe += 1) feValues.push(fe);
+
+  const newHpmData = feValues.map(fe => parseFloat(calcNew({ ni: NI, fe, co: CO, cr: CR, mc: MC }).hpm.toFixed(2)));
+  const oldHpmData = feValues.map(fe => parseFloat(calcOld({ ni: NI, fe, co: CO, cr: CR, mc: MC }).hpm.toFixed(2)));
+
+  // threshold index = index of Fe=35 (20→35 = index 15)
+  const threshIdx = feValues.indexOf(THRESHOLD);
+
+  // Plugin: background bands + threshold line + data labels
+  const fePlugin = {
+    id: "fePlugin",
+    beforeDatasetsDraw(chart) {
+      const { ctx, chartArea, scales } = chart;
+      const xScale = scales.x;
+      const { top, bottom, left, right } = chartArea;
+
+      // x pixel at the right edge of the Fe=35 bar (midpoint between index 15 and 16)
+      const xThresh35 = xScale.getPixelForValue(threshIdx);
+      const xThresh36 = xScale.getPixelForValue(threshIdx + 1);
+      const xDiv = (xThresh35 + xThresh36) / 2;
+
+      ctx.save();
+      // Green band: Fe ≤ 35% (HPM applied)
+      ctx.fillStyle = isDark ? "rgba(80,160,80,0.10)" : "rgba(80,160,80,0.13)";
+      ctx.fillRect(left, top, xDiv - left, bottom - top);
+      // Grey band: Fe > 35% (HPM NOT applied)
+      ctx.fillStyle = isDark ? "rgba(150,150,150,0.10)" : "rgba(150,150,150,0.12)";
+      ctx.fillRect(xDiv, top, right - xDiv, bottom - top);
+
+      // Dashed vertical threshold line
+      ctx.setLineDash([4, 3]);
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)";
+      ctx.beginPath();
+      ctx.moveTo(xDiv, top);
+      ctx.lineTo(xDiv, bottom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Text labels
+      ctx.font = "600 9px 'DM Sans', sans-serif";
+      ctx.textAlign = "center";
+      // Fe ≤ 35% label
+      ctx.fillStyle = isDark ? "rgba(80,180,80,0.85)" : "rgba(40,120,40,0.85)";
+      ctx.fillText("Fe ≤ 35%", left + (xDiv - left) / 2, top + 13);
+      ctx.font = "400 8px 'DM Sans', sans-serif";
+      ctx.fillText("HPM applied", left + (xDiv - left) / 2, top + 24);
+      // Fe > 35% label
+      ctx.font = "600 9px 'DM Sans', sans-serif";
+      ctx.fillStyle = isDark ? "rgba(180,180,180,0.85)" : "rgba(100,100,100,0.85)";
+      ctx.fillText("Fe > 35%", xDiv + (right - xDiv) / 2, top + 13);
+      ctx.font = "400 8px 'DM Sans', sans-serif";
+      ctx.fillText("HPM NOT applied", xDiv + (right - xDiv) / 2, top + 24);
+
+      ctx.restore();
+    },
+    afterDatasetsDraw(chart) {
+      const { ctx } = chart;
+      chart.data.datasets.forEach((ds, di) => {
+        const meta = chart.getDatasetMeta(di);
+        if (meta.hidden) return;
+        ctx.save();
+        ctx.font = `600 8px 'JetBrains Mono', monospace`;
+        ctx.textAlign = "center";
+        meta.data.forEach((pt, i) => {
+          const yOffset = di === 0 ? -10 : 14;
+          ctx.fillStyle = ds.borderColor;
+          ctx.fillText(ds.data[i].toFixed(1), pt.x, pt.y + yOffset);
+        });
+        ctx.restore();
+      });
+    }
+  };
+
+  const cfg = {
+    type: "line",
+    data: {
+      labels: feValues.map(fe => `${fe}%`),
+      datasets: [
+        {
+          label: "New HPM (Kepmen 144/2026)",
+          data: newHpmData,
+          borderColor: "#1a3a5c", backgroundColor: "rgba(26,58,92,0.08)",
+          borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: "#1a3a5c", tension: 0.3,
+        },
+        {
+          label: "Old HPM (Kepmen 268/2025)",
+          data: oldHpmData,
+          borderColor: "#7ab3d4", backgroundColor: "rgba(122,179,212,0.08)",
+          borderWidth: 2, pointRadius: 4, pointStyle: "triangle", pointBackgroundColor: "#7ab3d4", tension: 0.3,
+          borderDash: [5, 3],
+        },
+      ]
+    },
+    options: {
+      responsive: true,
+      layout: { padding: { top: 30, bottom: 10 } },
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { labels: { color: textColor, font: { family: "DM Sans", size: 11 }, boxWidth: 20 } },
+        tooltip: {
+          callbacks: {
+            title: items => `Fe ${items[0].label}`,
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)} USD/WMT`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: tickColor, font: { family: "JetBrains Mono", size: 9 }, maxRotation: 0 },
+          grid: { color: gridColor },
+          title: { display: true, text: "Fe Content (%)", color: tickColor, font: { size: 10 } }
+        },
+        y: {
+          ticks: { color: tickColor, font: { family: "JetBrains Mono", size: 9 }, callback: v => v.toFixed(1) },
+          grid: { color: gridColor },
+          title: { display: true, text: "USD/WMT", color: tickColor, font: { size: 10 } }
+        }
+      }
+    },
+    plugins: [fePlugin],
+  };
+
+  if (chartFe) chartFe.destroy();
+  chartFe = new Chart(document.getElementById("chart-fe"), cfg);
+}
+
+// ===== Co Sensitivity chart =====
+let chartCo = null;
+
+function renderCoSensitivity() {
+  document.getElementById("co-hma-period").textContent = hmaPeriod;
+
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  const gridColor = isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)";
+  const tickColor = isDark ? "#666" : "#999";
+  const textColor = isDark ? "#ddd" : "#333";
+
+  // Fixed Saprolite params, Co sweeps 0.01→0.10 step 0.01
+  const NI = 1.50, FE = 20, CR = 1.00, MC = 35;
+  const THRESHOLD = 0.05;
+  const coValues = [];
+  for (let i = 1; i <= 10; i++) coValues.push(parseFloat((i * 0.01).toFixed(2)));
+
+  const newHpmData = coValues.map(co => parseFloat(calcNew({ ni: NI, fe: FE, co, cr: CR, mc: MC }).hpm.toFixed(2)));
+  const oldHpmData = coValues.map(co => parseFloat(calcOld({ ni: NI, fe: FE, co, cr: CR, mc: MC }).hpm.toFixed(2)));
+
+  const threshIdx = coValues.indexOf(THRESHOLD); // index of Co=0.05 → index 4
+
+  const coPlugin = {
+    id: "coPlugin",
+    beforeDatasetsDraw(chart) {
+      const { ctx, chartArea, scales } = chart;
+      const xScale = scales.x;
+      const { top, bottom, left, right } = chartArea;
+
+      // Divider midpoint between Co=0.05 (index 4) and Co=0.06 (index 5)
+      const x0 = xScale.getPixelForValue(threshIdx - 1);
+      const x1 = xScale.getPixelForValue(threshIdx);
+      const xDiv = (x0 + x1) / 2;
+
+      ctx.save();
+
+      // Grey band: Co < 0.05% (HPM NOT applied / lower)
+      ctx.fillStyle = isDark ? "rgba(150,150,150,0.10)" : "rgba(150,150,150,0.12)";
+      ctx.fillRect(left, top, xDiv - left, bottom - top);
+      // Green band: Co ≥ 0.05% (HPM applied / Kobalt component kicks in)
+      ctx.fillStyle = isDark ? "rgba(80,160,80,0.10)" : "rgba(80,160,80,0.13)";
+      ctx.fillRect(xDiv, top, right - xDiv, bottom - top);
+
+      // Dashed vertical threshold line
+      ctx.setLineDash([4, 3]);
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)";
+      ctx.beginPath();
+      ctx.moveTo(xDiv, top);
+      ctx.lineTo(xDiv, bottom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Text labels
+      ctx.textAlign = "center";
+      // Co < 0.05 label
+      ctx.font = "600 9px 'DM Sans', sans-serif";
+      ctx.fillStyle = isDark ? "rgba(180,180,180,0.85)" : "rgba(100,100,100,0.85)";
+      ctx.fillText("Co < 0.05%", left + (xDiv - left) / 2, top + 13);
+      ctx.font = "400 8px 'DM Sans', sans-serif";
+      ctx.fillText("Cobalt not counted", left + (xDiv - left) / 2, top + 24);
+      // Co ≥ 0.05 label
+      ctx.font = "600 9px 'DM Sans', sans-serif";
+      ctx.fillStyle = isDark ? "rgba(80,180,80,0.85)" : "rgba(40,120,40,0.85)";
+      ctx.fillText("Co ≥ 0.05%", xDiv + (right - xDiv) / 2, top + 13);
+      ctx.font = "400 8px 'DM Sans', sans-serif";
+      ctx.fillText("Cobalt counted", xDiv + (right - xDiv) / 2, top + 24);
+
+      ctx.restore();
+    },
+    afterDatasetsDraw(chart) {
+      const { ctx } = chart;
+      chart.data.datasets.forEach((ds, di) => {
+        const meta = chart.getDatasetMeta(di);
+        if (meta.hidden) return;
+        ctx.save();
+        ctx.font = `600 8px 'JetBrains Mono', monospace`;
+        ctx.textAlign = "center";
+        meta.data.forEach((pt, i) => {
+          const yOffset = di === 0 ? -10 : 14;
+          ctx.fillStyle = ds.borderColor;
+          ctx.fillText(ds.data[i].toFixed(1), pt.x, pt.y + yOffset);
+        });
+        ctx.restore();
+      });
+    }
+  };
+
+  const cfg = {
+    type: "line",
+    data: {
+      labels: coValues.map(co => `${co.toFixed(2)}%`),
+      datasets: [
+        {
+          label: "New HPM (Kepmen 144/2026)",
+          data: newHpmData,
+          borderColor: "#1a3a5c", backgroundColor: "rgba(26,58,92,0.08)",
+          borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: "#1a3a5c", tension: 0.3,
+        },
+        {
+          label: "Old HPM (Kepmen 268/2025)",
+          data: oldHpmData,
+          borderColor: "#7ab3d4", backgroundColor: "rgba(122,179,212,0.08)",
+          borderWidth: 2, pointRadius: 4, pointStyle: "triangle", pointBackgroundColor: "#7ab3d4", tension: 0.3,
+          borderDash: [5, 3],
+        },
+      ]
+    },
+    options: {
+      responsive: true,
+      layout: { padding: { top: 30, bottom: 10 } },
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { labels: { color: textColor, font: { family: "DM Sans", size: 11 }, boxWidth: 20 } },
+        tooltip: {
+          callbacks: {
+            title: items => `Co ${items[0].label}`,
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)} USD/WMT`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: tickColor, font: { family: "JetBrains Mono", size: 9 }, maxRotation: 0 },
+          grid: { color: gridColor },
+          title: { display: true, text: "Co Content (%)", color: tickColor, font: { size: 10 } }
+        },
+        y: {
+          ticks: { color: tickColor, font: { family: "JetBrains Mono", size: 9 }, callback: v => v.toFixed(1) },
+          grid: { color: gridColor },
+          title: { display: true, text: "USD/WMT", color: tickColor, font: { size: 10 } }
+        }
+      }
+    },
+    plugins: [coPlugin],
+  };
+
+  if (chartCo) chartCo.destroy();
+  chartCo = new Chart(document.getElementById("chart-co"), cfg);
+}
 
 buildInputs(); renderResults();
 </script>
