@@ -11,7 +11,7 @@ Kalkulator interaktif untuk menghitung **Harga Patokan Mineral (HPM) Bijih Nikel
 - Corrective Factor otomatis sesuai ketentuan Kepmen 144/2026
 - Perbandingan dengan HPM lama (Kepmen 268/2025)
 - HMA **diperbarui otomatis** setiap hari via GitHub Actions dari [minerba.esdm.go.id](https://www.minerba.esdm.go.id/harga_acuan)
-- **4 tab grafik interaktif:**
+- **3 tab grafik interaktif:**
   - **HPM vs Market** — perbandingan HPM New/Old vs harga pasar, dari Limonite ke Saprolite dalam satu grafik
   - **Fe Sensitivity** — sensitivitas HPM terhadap kadar Fe (20%–40%), dengan highlight threshold Fe ≤ 35%
   - **Co Sensitivity** — sensitivitas HPM terhadap kadar Co (0.01%–0.10%), dengan highlight threshold Co ≥ 0.05%
@@ -42,10 +42,10 @@ Satuan: **USD/WMT** (Wet Metric Ton). Berlaku sejak **15 April 2026**.
 
 ## Cara Pakai
 
-1. Pilih tipe ore: **Limonite** atau **Saprolite**
+1. Pilih tab kalkulator: **Limonite** atau **Saprolite**
 2. Input kadar mineral (Ni, Fe, Co, Cr) dan Moisture Content
-3. Hasil HPM otomatis terhitung
-4. Gunakan tab grafik untuk analisis sensitivitas
+3. Hasil HPM otomatis terhitung — lengkap dengan CF table dan perbandingan HPM lama
+4. Gunakan tab **HPM vs Market**, **Fe Sensitivity**, atau **Co Sensitivity** untuk analisis grafik
 
 Tidak perlu install apapun — cukup buka di browser atau akses via link di atas.
 
