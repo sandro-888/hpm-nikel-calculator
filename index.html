@@ -292,9 +292,9 @@ const defaultData = {
 };
 
 const hma = {
-    nikel: 16933.57, bijih_besi: 1.58, kobalt: 55852.86, bijih_krom: 6.37,
+  nikel: 16933.57, bijih_besi: 1.58, kobalt: 55852.86, bijih_krom: 6.37,
 };
-const hmaUpdated = "2026-04-16 11:12 WIB";
+const hmaUpdated = "2026-04-16 00:01 WIB";
 const hmaPeriod = "April 2026 (P2)";
 
 let active = "limonite";
@@ -904,10 +904,8 @@ function renderFeSensitivity() {
       const xScale = scales.x;
       const { top, bottom, left, right } = chartArea;
 
-      // x pixel at the right edge of the Fe=35 bar (midpoint between index 15 and 16)
-      const xThresh35 = xScale.getPixelForValue(threshIdx);
-      const xThresh36 = xScale.getPixelForValue(threshIdx + 1);
-      const xDiv = (xThresh35 + xThresh36) / 2;
+      // Divider exactly at Fe=35% tick
+      const xDiv = xScale.getPixelForValue(threshIdx);
 
       ctx.save();
       // Green band: Fe ≤ 35% (HPM applied)
@@ -927,20 +925,22 @@ function renderFeSensitivity() {
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // Text labels
-      ctx.font = "600 9px 'DM Sans', sans-serif";
+      // Text labels — placed in the lower-middle empty space between the two lines
+      const labelY1 = top + (bottom - top) * 0.62;
+      const labelY2 = labelY1 + 13;
       ctx.textAlign = "center";
       // Fe ≤ 35% label
+      ctx.font = "600 9px 'DM Sans', sans-serif";
       ctx.fillStyle = isDark ? "rgba(80,180,80,0.85)" : "rgba(40,120,40,0.85)";
-      ctx.fillText("Fe ≤ 35%", left + (xDiv - left) / 2, top + 13);
+      ctx.fillText("Fe ≤ 35%", left + (xDiv - left) / 2, labelY1);
       ctx.font = "400 8px 'DM Sans', sans-serif";
-      ctx.fillText("HPM applied", left + (xDiv - left) / 2, top + 24);
+      ctx.fillText("Fe counted", left + (xDiv - left) / 2, labelY2);
       // Fe > 35% label
       ctx.font = "600 9px 'DM Sans', sans-serif";
       ctx.fillStyle = isDark ? "rgba(180,180,180,0.85)" : "rgba(100,100,100,0.85)";
-      ctx.fillText("Fe > 35%", xDiv + (right - xDiv) / 2, top + 13);
+      ctx.fillText("Fe > 35%", xDiv + (right - xDiv) / 2, labelY1);
       ctx.font = "400 8px 'DM Sans', sans-serif";
-      ctx.fillText("HPM NOT applied", xDiv + (right - xDiv) / 2, top + 24);
+      ctx.fillText("Fe not counted", xDiv + (right - xDiv) / 2, labelY2);
 
       ctx.restore();
     },
@@ -1044,10 +1044,8 @@ function renderCoSensitivity() {
       const xScale = scales.x;
       const { top, bottom, left, right } = chartArea;
 
-      // Divider midpoint between Co=0.05 (index 4) and Co=0.06 (index 5)
-      const x0 = xScale.getPixelForValue(threshIdx - 1);
-      const x1 = xScale.getPixelForValue(threshIdx);
-      const xDiv = (x0 + x1) / 2;
+      // Divider exactly at Co=0.05% tick
+      const xDiv = xScale.getPixelForValue(threshIdx);
 
       ctx.save();
 
@@ -1068,20 +1066,22 @@ function renderCoSensitivity() {
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // Text labels
+      // Text labels — placed in lower-middle empty space
+      const labelY1 = top + (bottom - top) * 0.62;
+      const labelY2 = labelY1 + 13;
       ctx.textAlign = "center";
       // Co < 0.05 label
       ctx.font = "600 9px 'DM Sans', sans-serif";
       ctx.fillStyle = isDark ? "rgba(180,180,180,0.85)" : "rgba(100,100,100,0.85)";
-      ctx.fillText("Co < 0.05%", left + (xDiv - left) / 2, top + 13);
+      ctx.fillText("Co < 0.05%", left + (xDiv - left) / 2, labelY1);
       ctx.font = "400 8px 'DM Sans', sans-serif";
-      ctx.fillText("Cobalt not counted", left + (xDiv - left) / 2, top + 24);
+      ctx.fillText("Cobalt not counted", left + (xDiv - left) / 2, labelY2);
       // Co ≥ 0.05 label
       ctx.font = "600 9px 'DM Sans', sans-serif";
       ctx.fillStyle = isDark ? "rgba(80,180,80,0.85)" : "rgba(40,120,40,0.85)";
-      ctx.fillText("Co ≥ 0.05%", xDiv + (right - xDiv) / 2, top + 13);
+      ctx.fillText("Co ≥ 0.05%", xDiv + (right - xDiv) / 2, labelY1);
       ctx.font = "400 8px 'DM Sans', sans-serif";
-      ctx.fillText("Cobalt counted", xDiv + (right - xDiv) / 2, top + 24);
+      ctx.fillText("Cobalt counted", xDiv + (right - xDiv) / 2, labelY2);
 
       ctx.restore();
     },
