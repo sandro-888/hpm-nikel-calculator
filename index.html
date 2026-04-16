@@ -59,12 +59,13 @@
   .formula-src { font: 400 9px 'DM Sans', sans-serif; color: var(--dim); margin-top: 4px; }
 
   /* Tabs */
-  .tabs { display: flex; gap: 0; margin: 0 0 20px; border-bottom: 2px solid var(--border); }
+  .tabs { display: flex; gap: 0; margin: 0 0 20px; border-bottom: 2px solid var(--border); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
   .tab {
-    padding: 10px 28px; font: 600 13px 'DM Sans', sans-serif; color: var(--dim);
+    padding: 10px 20px; font: 600 13px 'DM Sans', sans-serif; color: var(--dim);
     cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px;
     transition: all .15s; background: none; border-top: none; border-left: none; border-right: none;
-    position: relative;
+    position: relative; white-space: nowrap; flex-shrink: 0;
   }
   .tab:hover { color: var(--text); background: var(--accent-bg); border-radius: 6px 6px 0 0; }
   .tab.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--accent-bg); border-radius: 6px 6px 0 0; }
@@ -243,7 +244,7 @@
     <div id="left-col">
       <div class="card" id="grade-card">
         <div class="card-t">
-          Ore Grades <span class="badge" id="grade-badge">saprolite</span>
+          Ore Grades <span class="badge" id="grade-badge">limonite</span>
           <button class="sample-btn" id="sample-btn" onclick="loadSample()">Reset</button>
         </div>
         <div class="input-hint">Please input here</div>
@@ -270,6 +271,11 @@ function toggleTheme() {
   document.getElementById("toggle-icon").textContent = next === "dark" ? "☀️" : "🌙";
   document.getElementById("toggle-label").textContent = next === "dark" ? "Light" : "Dark";
   try { localStorage.setItem("hpm-theme", next); } catch(e) {}
+  // Re-render active chart so colors update immediately
+  const activeTab = document.querySelector(".tab.active")?.dataset.tab;
+  if (activeTab === "chart") renderCharts();
+  else if (activeTab === "fe-sensitivity") renderFeSensitivity();
+  else if (activeTab === "co-sensitivity") renderCoSensitivity();
 }
 try {
   const saved = localStorage.getItem("hpm-theme");
@@ -422,10 +428,10 @@ function updateNotes() {
   const feInp = document.getElementById("inp-fe");
   if (feNote) {
     if (o.fe <= 35) {
-      feNote.textContent = "✓ ≤35% — ikutan applies"; feNote.className = "field-note ok";
+      feNote.textContent = "✓ ≤35% — counted"; feNote.className = "field-note ok";
       feInp && feInp.classList.remove("excl-input");
     } else {
-      feNote.textContent = "✗ >35% — excluded"; feNote.className = "field-note no";
+      feNote.textContent = "✗ >35% — not counted"; feNote.className = "field-note no";
       feInp && feInp.classList.add("excl-input");
     }
   }
@@ -435,10 +441,10 @@ function updateNotes() {
   const coInp = document.getElementById("inp-co");
   if (coNote) {
     if (o.co >= 0.05) {
-      coNote.textContent = "✓ ≥0.05% — ikutan applies"; coNote.className = "field-note ok";
+      coNote.textContent = "✓ ≥0.05% — counted"; coNote.className = "field-note ok";
       coInp && coInp.classList.remove("excl-input");
     } else {
-      coNote.textContent = "✗ <0.05% — excluded"; coNote.className = "field-note no";
+      coNote.textContent = "✗ <0.05% — not counted"; coNote.className = "field-note no";
       coInp && coInp.classList.add("excl-input");
     }
   }
